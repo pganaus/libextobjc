@@ -94,9 +94,21 @@ static void ext_injectConcreteProtocol (Protocol *protocol, Class containerClass
     (void)[containerClass class];
 }
 
-BOOL ext_addConcreteProtocol (Protocol *protocol, Class containerClass) {
-    return ext_loadSpecialProtocol(protocol, ^(Class destinationClass){
-        ext_injectConcreteProtocol(protocol, containerClass, destinationClass);
+BOOL ext_addConcreteProtocol (Protocol *protocol, Class containerClass, unsigned classCount, ...) {
+    Class *allClasses = (Class *)malloc(sizeof(Class) * (classCount + 1));
+    va_list allClassNames;
+    va_start(allClassNames, classCount);
+    for (unsigned idx = 0; idx < classCount; idx++) {
+        const char *className = va_arg(allClassNames, const char *);
+        allClasses[idx] = objc_getClass(className);
+    }
+    va_end(allClassNames);
+    return ext_loadSpecialProtocol(protocol, ^{
+        for (unsigned idx = 0; idx < classCount; idx++) {
+            Class destinationClass = allClasses[idx];
+            ext_injectConcreteProtocol(protocol, containerClass, destinationClass);
+        }
+        free(allClasses);
     });
 }
 

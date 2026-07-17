@@ -18,7 +18,7 @@
 #import <string.h>
 
 typedef NSMethodSignature *(*methodSignatureForSelectorIMP)(id, SEL, SEL);
-typedef void (^ext_specialProtocolInjectionBlock)(Class);
+typedef void (^ext_specialProtocolInjectionBlock)(void);
 
 // a `const char *` equivalent to system struct objc_method_description
 typedef struct {
@@ -116,22 +116,22 @@ static void ext_injectSpecialProtocols (void) {
         return protocolInjectionPriority(protoB) - protocolInjectionPriority(protoA);
     });
 
-    unsigned classCount = objc_getClassList(NULL, 0);
-    if (!classCount) {
-        fprintf(stderr, "ERROR: No classes registered with the runtime\n");
-        return;
-    }
+    //    unsigned classCount = objc_getClassList(NULL, 0);
+    //    if (!classCount) {
+    //        fprintf(stderr, "ERROR: No classes registered with the runtime\n");
+    //        return;
+    //    }
 
-	Class *allClasses = (Class *)malloc(sizeof(Class) * (classCount + 1));
-    if (!allClasses) {
-        fprintf(stderr, "ERROR: Could not allocate space for %u classes\n", classCount);
-        return;
-    }
+	//    Class *allClasses = (Class *)malloc(sizeof(Class) * (classCount + 1));
+    //    if (!allClasses) {
+    //        fprintf(stderr, "ERROR: Could not allocate space for %u classes\n", classCount);
+    //        return;
+    //    }
 
 	// use this instead of ext_copyClassList() to avoid sending +initialize to
 	// classes that we don't plan to inject into (this avoids some SenTestingKit
 	// timing issues)
-	classCount = objc_getClassList(allClasses, classCount);
+	//    classCount = objc_getClassList(allClasses, classCount);
 
     /*
      * set up an autorelease pool in case any Cocoa classes get used during
@@ -146,7 +146,7 @@ static void ext_injectSpecialProtocols (void) {
         // X and Y that implement protocols A and B, respectively. B needs to get
         // its implementation into Y before A gets into X.
         for (size_t i = 0;i < specialProtocolCount;++i) {
-            Protocol *protocol = specialProtocols[i].protocol;
+            //            Protocol *protocol = specialProtocols[i].protocol;
             
             // transfer ownership of the injection block to ARC and remove it
             // from the structure
@@ -154,21 +154,22 @@ static void ext_injectSpecialProtocols (void) {
             specialProtocols[i].injectionBlock = NULL;
 
             // loop through all classes
-            for (unsigned classIndex = 0;classIndex < classCount;++classIndex) {
-                Class class = allClasses[classIndex];
-                
-                // if this class doesn't conform to the protocol, continue to the
-                // next class immediately
-                if (!class_conformsToProtocol(class, protocol))
-                    continue;
-                
-                injectionBlock(class);
-            }
+            //            for (unsigned classIndex = 0;classIndex < classCount;++classIndex) {
+            //                Class class = allClasses[classIndex];
+            //                
+            //                // if this class doesn't conform to the protocol, continue to the
+            //                // next class immediately
+            //                if (!class_conformsToProtocol(class, protocol))
+            //                    continue;
+            //                
+            //                injectionBlock(class);
+            //            }
+            injectionBlock();
         }
     }
 
     // free the allocated class list
-    free(allClasses);
+    //    free(allClasses);
 
     // now that everything's injected, the special protocol list can also be
     // destroyed
@@ -737,9 +738,9 @@ NSMethodSignature *ext_globalMethodSignatureForSelector (SEL aSelector) {
 
     // set up a small & simple cache/hash to avoid repeatedly scouring every
     // class & protocol in the runtime.
-    static const size_t selectorCacheLength = 1 << 8;
-    static const uintptr_t selectorCacheMask = (selectorCacheLength - 1);
-    static ext_methodDescription volatile methodDescriptionCache[selectorCacheLength];
+#define SelectorCacheLength (1 << 8)
+    static const uintptr_t selectorCacheMask = (SelectorCacheLength - 1);
+    static ext_methodDescription volatile methodDescriptionCache[SelectorCacheLength];
 
     uintptr_t hash = (uintptr_t)((void *)aSelector) & selectorCacheMask;
     ext_methodDescription methodDesc;
@@ -817,7 +818,7 @@ NSMethodSignature *ext_globalMethodSignatureForSelector (SEL aSelector) {
     }
 }
 
-BOOL ext_loadSpecialProtocol (Protocol *protocol, void (^injectionBehavior)(Class destinationClass)) {
+BOOL ext_loadSpecialProtocol (Protocol *protocol, void (^injectionBehavior)(void)) {
     @autoreleasepool {
         NSCParameterAssert(protocol != nil);
         NSCParameterAssert(injectionBehavior != nil);

@@ -82,7 +82,7 @@
  * of a concrete protocol, as the superclass may not be the type you expect (and
  * may not even inherit from \c NSObject).
  */
-#define concreteprotocol(NAME) \
+#define concreteprotocol(NAME, CLASS_COUNT, ...) \
     /*
      * create a class used to contain all the methods used in this protocol
      */ \
@@ -99,7 +99,7 @@
          * passes the actual protocol as the first parameter, then this class as
          * the second
          */ \
-        if (!ext_addConcreteProtocol(objc_getProtocol(metamacro_stringify(NAME)), self)) \
+        if (!ext_addConcreteProtocol(objc_getProtocol(metamacro_stringify(NAME)), self, CLASS_COUNT, __VA_ARGS__)) \
             fprintf(stderr, "ERROR: Could not load concrete protocol %s\n", metamacro_stringify(NAME)); \
     } \
     \
@@ -118,6 +118,6 @@
     }
 
 /*** implementation details follow ***/
-BOOL ext_addConcreteProtocol (Protocol *protocol, Class methodContainer);
+BOOL ext_addConcreteProtocol (Protocol *protocol, Class methodContainer, unsigned classCount, ...);
 void ext_loadConcreteProtocol (Protocol *protocol);
 

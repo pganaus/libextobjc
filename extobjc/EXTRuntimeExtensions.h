@@ -141,8 +141,8 @@ typedef struct {
 #pragma clang diagnostic pop
 
     /**
-     * The backing instance variable for this property, or \c NULL if \c
-     * \c @synthesize was not used, and therefore no instance variable exists. This
+     * The backing instance variable for this property, or \c NULL if
+     * \c \@synthesize was not used, and therefore no instance variable exists. This
      * would also be the case if the property is implemented dynamically.
      */
     const char *ivar;
@@ -338,7 +338,7 @@ BOOL ext_injectMethodsFromClass (Class srcClass, Class dstClass, ext_methodInjec
  * @note A special protocol X which conforms to another special protocol Y is
  * always injected \e after Y.
  */
-BOOL ext_loadSpecialProtocol (Protocol *protocol, void (^injectionBehavior)(Class destinationClass));
+BOOL ext_loadSpecialProtocol (Protocol *protocol, void (^injectionBehavior)(void));
 
 /**
  * Marks a special protocol as being ready for injection. Injection is actually
